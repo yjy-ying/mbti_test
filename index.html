@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MBTI 小測驗</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-strong: #ffffff;
+      --text: #132238;
+      --muted: #5c6b7e;
+      --line: rgba(19, 34, 56, 0.1);
+      --shadow: 0 20px 60px rgba(13, 32, 61, 0.12);
+      --accent: #2d8cff;
+      --accent-2: #00c2a8;
+      --accent-soft: rgba(45, 140, 255, 0.12);
+      --good: #1f9d67;
+      --warn: #db7c2f;
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(0, 194, 168, 0.18), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(45, 140, 255, 0.16), transparent 24%),
+        radial-gradient(circle at 80% 90%, rgba(255, 161, 94, 0.12), transparent 26%),
+        linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(19, 34, 56, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(19, 34, 56, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(circle at center, black 55%, transparent 100%);
+      opacity: 0.45;
+    }
+
+    .app {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 24px auto 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-text {
+      font-size: 1.05rem;
+      letter-spacing: 0.16em;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      backdrop-filter: blur(12px);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .hero,
+    .quiz,
+    .result {
+      display: none;
+    }
+
+    .hero.active,
+    .quiz.active,
+    .result.active {
+      display: grid;
+      animation: fadeUp 0.45s ease both;
+    }
+
+    .hero {
+      grid-template-columns: 1.12fr 0.88fr;
+      min-height: 72vh;
+    }
+
+    .hero-copy {
+      padding: clamp(28px, 5vw, 54px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 4.9rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: 1.03rem;
+      line-height: 1.8;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .button {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    .button.primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 18px 30px rgba(45, 140, 255, 0.26);
+    }
+
+    .button.secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--line);
+    }
+
+    .hero-side {
+      padding: clamp(18px, 4vw, 32px);
+      display: grid;
+      place-items: center;
+      gap: 16px;
+      align-content: center;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66)),
+        radial-gradient(circle at top right, rgba(0, 194, 168, 0.16), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(45, 140, 255, 0.16), transparent 42%);
+      border-left: 1px solid rgba(19, 34, 56, 0.06);
+    }
+
+    .hero-art {
+      width: min(100%, 360px);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+
+    .hero-orb {
+      width: clamp(180px, 24vw, 250px);
+      height: clamp(180px, 24vw, 250px);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: clamp(1.3rem, 2.5vw, 2rem);
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.45), transparent 28%),
+        linear-gradient(135deg, rgba(45, 140, 255, 0.98), rgba(0, 194, 168, 0.92));
+      box-shadow:
+        0 18px 50px rgba(45, 140, 255, 0.22),
+        inset 0 0 0 10px rgba(255, 255, 255, 0.12);
+      position: relative;
+    }
+
+    .hero-orb::before,
+    .hero-orb::after {
+      content: "";
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
+      border: 1px solid rgba(45, 140, 255, 0.12);
+    }
+
+    .hero-orb::after {
+      inset: -30px;
+      border-color: rgba(0, 194, 168, 0.12);
+    }
+
+    .orbit-card {
+      position: absolute;
+      min-width: 78px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(19, 34, 56, 0.08);
+      box-shadow: 0 14px 26px rgba(19, 34, 56, 0.08);
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .orbit-card strong {
+      display: block;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+
+    .orbit-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .orbit-a {
+      top: 8%;
+      left: 4%;
+    }
+
+    .orbit-b {
+      top: 18%;
+      right: 0;
+    }
+
+    .orbit-c {
+      bottom: 16%;
+      left: 0;
+    }
+
+    .orbit-d {
+      bottom: 6%;
+      right: 12%;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      min-height: 118px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.35rem;
+      margin-bottom: 8px;
+      letter-spacing: -0.03em;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .note {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .quiz,
+    .result {
+      padding: clamp(20px, 4vw, 34px);
+    }
+
+    .quiz-head,
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .quiz-head h2,
+    .result-head h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 4vw, 2.2rem);
+      letter-spacing: -0.04em;
+    }
+
+    .subtle {
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .progress-wrap {
+      margin: 14px 0 24px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(19, 34, 56, 0.08);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.3s ease;
+    }
+
+    .question-card {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      padding: clamp(20px, 4vw, 32px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .question-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(45, 140, 255, 0.1);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .question-text {
+      margin: 0 0 20px;
+      font-size: clamp(1.35rem, 2.7vw, 2rem);
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .choice {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(19, 34, 56, 0.1);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.95));
+      border-radius: 28px;
+      padding: 18px 18px 16px;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      cursor: pointer;
+      min-height: 170px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 16px 28px rgba(19, 34, 56, 0.07);
+      transform: none;
+    }
+
+    .choice:nth-child(odd) {
+      transform-origin: left center;
+    }
+
+    .choice:nth-child(even) {
+      transform-origin: right center;
+    }
+
+    .choice::after {
+      content: "";
+      position: absolute;
+      inset: auto -18% -28% auto;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45, 140, 255, 0.12), transparent 70%);
+      pointer-events: none;
+    }
+
+    .choice:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 34px rgba(19, 34, 56, 0.12);
+      border-color: rgba(45, 140, 255, 0.24);
+    }
+
+    .choice.active {
+      background: linear-gradient(180deg, rgba(45, 140, 255, 0.14), rgba(0, 194, 168, 0.1));
+      border-color: rgba(45, 140, 255, 0.42);
+      box-shadow: 0 18px 36px rgba(45, 140, 255, 0.14);
+    }
+
+    .choice .key {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      font-weight: 800;
+      background: rgba(19, 34, 56, 0.05);
+      color: var(--muted);
+    }
+
+    .choice.active .key {
+      background: var(--accent);
+      color: white;
+    }
+
+    .choice-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      flex: 1;
+      flex: 0 0 auto;
+      background: linear-gradient(135deg, rgba(45, 140, 255, 0.12), rgba(0, 194, 168, 0.12));
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .choice-direction {
+      display: none;
+    }
+
+    .choice-body {
+      display: grid;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .choice-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .choice-hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .quiz-actions,
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    .quiz-actions .group,
+    .result-actions .group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .button[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .result-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .result-hero {
+      display: grid;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .result-card,
+    .info-card {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 34px rgba(13, 32, 61, 0.08);
+      overflow: hidden;
+    }
+
+    .result-card {
+      padding: 24px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .result-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -35% auto;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.36), transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .type-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .type-code {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 0.15em;
+    }
+
+    .type-title {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+    }
+
+    .type-subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+
+    .type-library {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .type-group {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.88);
+      padding: 18px;
+    }
+
+    .type-group-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .type-group-head h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .type-group-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .type-tile {
+      border: 1px solid rgba(19, 34, 56, 0.08);
+      border-radius: 18px;
+      padding: 14px 12px;
+      min-height: 118px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(247,250,255,0.92));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+      text-align: left;
+      cursor: default;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+    }
+
+    .type-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 24px rgba(19, 34, 56, 0.08);
+    }
+
+    .type-tile.active {
+      border-color: color-mix(in srgb, var(--accent) 55%, white);
+      box-shadow: 0 18px 28px color-mix(in srgb, var(--accent) 18%, transparent);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, white), rgba(255, 255, 255, 0.98));
+      transform: translateY(-2px) scale(1.01);
+    }
+
+    .type-tile.dimmed {
+      opacity: 0.42;
+    }
+
+    .tile-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 20px color-mix(in srgb, var(--accent) 24%, transparent);
+    }
+
+    .tile-code {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+    }
+
+    .tile-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+    }
+
+    .tile-tag {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .result-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+      gap: 16px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: rgba(19, 34, 56, 0.05);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .info-card {
+      padding: 20px;
+    }
+
+    .info-card h3 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .axis-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .axis-card {
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(19, 34, 56, 0.03), rgba(19, 34, 56, 0.02));
+      border: 1px solid rgba(19, 34, 56, 0.06);
+      padding: 14px;
+      min-height: 120px;
+    }
+
+    .axis-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    .axis-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .content-card {
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .content-card h4 {
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    .content-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .content-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      margin-top: 6px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      pointer-events: none;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(45, 140, 255, 0.26);
+      animation: pop 0.8s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pop {
+      0% {
+        transform: translate3d(var(--x, 0), var(--y, 0), 0) scale(0.7);
+        opacity: 0;
+      }
+      20% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(calc(var(--x, 0) + var(--dx, 0)), calc(var(--y, 0) + var(--dy, 0)), 0) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-side {
+        border-left: none;
+        border-top: 1px solid rgba(19, 34, 56, 0.06);
+      }
+
+      .stat-grid,
+      .axis-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .type-library,
+      .result-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .type-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        width: min(100vw - 18px, 1120px);
+        margin-top: 10px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .badge {
+        width: fit-content;
+      }
+
+      .hero-copy,
+      .quiz,
+      .result,
+      .result-card,
+      .info-card {
+        padding: 20px;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .quiz-actions .group,
+      .result-actions .group {
+        width: 100%;
+      }
+
+      .quiz-actions,
+      .result-actions {
+        gap: 10px;
+      }
+
+      .choice {
+        width: 100%;
+      }
+
+      .choices {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-text">MBTI</div>
+      </div>
+    </div>
+
+    <section id="hero" class="card hero active">
+      <div class="hero-copy">
+        <h1>準備好了解你的MBTI了嗎?</h1>
+        <div class="hero-actions">
+          <button class="button primary" id="startBtn">開始測驗</button>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-orb">MBTI</div>
+          <div class="orbit-card orbit-a"><strong>E/I</strong><span>Energy</span></div>
+          <div class="orbit-card orbit-b"><strong>S/N</strong><span>Sense</span></div>
+          <div class="orbit-card orbit-c"><strong>T/F</strong><span>Think</span></div>
+          <div class="orbit-card orbit-d"><strong>J/P</strong><span>Flow</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="card quiz">
+      <div class="quiz-head">
+        <div>
+          <h2>開始答題</h2>
+          <p class="subtle">每題選一個最接近你的選項就好，沒有標準答案。</p>
+        </div>
+        <div class="badge" id="axisBadge">目前向度：-</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="questionCounter">第 1 題 / 12 題</span>
+          <span id="axisHint">正在測量你的第一個向度</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="question-card">
+        <div class="question-label" id="questionAxis">E / I</div>
+        <h3 class="question-text" id="questionText"></h3>
+        <div class="choices" id="choices"></div>
+      </div>
+
+      <div class="quiz-actions">
+        <div class="group">
+          <button class="button secondary" id="prevBtn" type="button">上一題</button>
+          <button class="button secondary" id="resetFromQuizBtn" type="button">重新開始</button>
+        </div>
+        <div class="group">
+          <button class="button primary" id="nextBtn" type="button" disabled>下一題</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="result" class="card result">
+      <div class="result-head">
+        <div>
+          <h2>你的測驗結果</h2>
+          <p class="subtle">這份結果可以直接拿來分享，也可以按重新測驗換一個版本。</p>
+        </div>
+        <div class="badge" id="resultBadge">結果已生成</div>
+      </div>
+
+      <div class="result-shell">
+        <div class="result-summary">
+          <div class="result-card" id="resultCard">
+            <div class="type-line">
+              <span class="type-code" id="resultType">INTP</span>
+              <span class="badge" id="resultTitleBadge">概念拆解王</span>
+            </div>
+            <h3 class="type-title" id="resultTitle">你的 MBTI 類型</h3>
+            <p class="type-subtitle" id="resultSubtitle"></p>
+            <div class="tag-row" id="keywordRow"></div>
+          </div>
+
+          <div class="info-card">
+            <h3>四個向度速寫</h3>
+            <div class="axis-grid" id="axisGrid"></div>
+          </div>
+        </div>
+
+        <div class="type-library" id="typeLibrary"></div>
+
+        <div class="content-grid">
+          <div class="content-card">
+            <h4>人格特色</h4>
+            <ul id="strengthList"></ul>
+          </div>
+          <div class="content-card">
+            <h4>可能的盲點</h4>
+            <ul id="blindspotList"></ul>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <div class="group">
+            <button class="button primary" id="restartBtn" type="button">重新測驗</button>
+            <button class="button secondary" id="copyBtn" type="button">複製結果摘要</button>
+          </div>
+        </div>
+
+        <div class="footer-note">這個結果頁偏娛樂與自我觀察用途，不等於正式心理評估。</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      {
+        axis: "E/I",
+        prompt: "臨時被朋友揪去聚會時，你通常會怎麼反應？",
+        options: [
+          { label: "先答應再說", hint: "到了現場再慢慢適應。", icon: "✦", letter: "E" },
+          { label: "先想一下", hint: "看今天狀態再決定。", icon: "◌", letter: "I" }
+        ]
+      },
+      {
+        axis: "E/I",
+        prompt: "在新環境裡認識陌生人時，你通常比較像哪一種？",
+        options: [
+          { label: "自然開口", hint: "越聊越有電。", icon: "◎", letter: "E" },
+          { label: "先觀察", hint: "熟了再進場。", icon: "◌", letter: "I" }
+        ]
+      },
+      {
+        axis: "E/I",
+        prompt: "一整天都沒有安排時，你通常會？",
+        options: [
+          { label: "找人出去走走", hint: "讓行程把自己喚醒。", icon: "✦", letter: "E" },
+          { label: "安靜待著", hint: "照自己的節奏來。", icon: "◌", letter: "I" }
+        ]
+      },
+      {
+        axis: "S/N",
+        prompt: "上課或看內容時，你比較容易被哪一種吸引？",
+        options: [
+          { label: "具體案例", hint: "實際步驟、明確細節。", icon: "▣", letter: "S" },
+          { label: "概念延伸", hint: "可能性、抽象聯想。", icon: "◎", letter: "N" }
+        ]
+      },
+      {
+        axis: "S/N",
+        prompt: "你看一部作品時，通常比較先注意什麼？",
+        options: [
+          { label: "劇情細節", hint: "看有沒有對上。", icon: "▣", letter: "S" },
+          { label: "背後意義", hint: "還能怎麼解讀。", icon: "◎", letter: "N" }
+        ]
+      },
+      {
+        axis: "S/N",
+        prompt: "做筆記時，你比較常出現哪一種風格？",
+        options: [
+          { label: "整理成清單", hint: "步驟、表格、重點。", icon: "▣", letter: "S" },
+          { label: "邊記邊聯想", hint: "常常寫到別的點子。", icon: "✦", letter: "N" }
+        ]
+      },
+      {
+        axis: "T/F",
+        prompt: "朋友要你幫忙評估一個方案時，你通常會？",
+        options: [
+          { label: "先分析利弊", hint: "找出最有效的做法。", icon: "▣", letter: "T" },
+          { label: "先看感受", hint: "想想大家會怎麼想。", icon: "♥", letter: "F" }
+        ]
+      },
+      {
+        axis: "T/F",
+        prompt: "遇到衝突時，你比較傾向怎麼處理？",
+        options: [
+          { label: "先講道理", hint: "問題比較容易收斂。", icon: "▣", letter: "T" },
+          { label: "先安撫情緒", hint: "讓彼此都能說話。", icon: "♥", letter: "F" }
+        ]
+      },
+      {
+        axis: "T/F",
+        prompt: "在團隊合作裡，你通常比較看重？",
+        options: [
+          { label: "效率與規則", hint: "分工要夠清楚。", icon: "▣", letter: "T" },
+          { label: "氣氛與默契", hint: "大家有沒有被照顧到。", icon: "♥", letter: "F" }
+        ]
+      },
+      {
+        axis: "J/P",
+        prompt: "你規劃週末時，通常比較像哪一種人？",
+        options: [
+          { label: "先排好行程", hint: "照表進行比較安心。", icon: "▣", letter: "J" },
+          { label: "先留空間", hint: "當天再看心情決定。", icon: "◌", letter: "P" }
+        ]
+      },
+      {
+        axis: "J/P",
+        prompt: "面對作業或報告的截止日，你比較常？",
+        options: [
+          { label: "提早收工", hint: "完成感最重要。", icon: "▣", letter: "J" },
+          { label: "靈感來再衝", hint: "效率會突然爆發。", icon: "✦", letter: "P" }
+        ]
+      },
+      {
+        axis: "J/P",
+        prompt: "當原本計畫突然變動時，你通常會？",
+        options: [
+          { label: "拉回正軌", hint: "心裡才踏實。", icon: "▣", letter: "J" },
+          { label: "順著變化", hint: "也許更有趣。", icon: "◌", letter: "P" }
+        ]
+      }
+    ];
+
+    const typeProfiles = {
+      ISTJ: { title: "穩定交付型", tagline: "一切先有規則，再安心往前。", keywords: ["可靠", "條理", "守序"], accent: "#2d8cff" },
+      ISFJ: { title: "默默照顧型", tagline: "不一定最吵，但常常最穩。", keywords: ["貼心", "細膩", "可靠"], accent: "#00b894" },
+      INFJ: { title: "觀察型理想派", tagline: "看得遠，也很在意人的感受。", keywords: ["洞察", "深度", "理想"], accent: "#1f9d67" },
+      INTJ: { title: "策略布局型", tagline: "先想清楚，再一招到位。", keywords: ["布局", "效率", "遠見"], accent: "#5b7cff" },
+      ISTP: { title: "冷靜動手派", tagline: "先拆開，再修好。", keywords: ["實作", "冷靜", "解題"], accent: "#3aa7a3" },
+      ISFP: { title: "柔軟感受派", tagline: "重視氛圍，也重視自己。", keywords: ["感受", "美感", "自在"], accent: "#4ea5ff" },
+      INFP: { title: "內建故事感", tagline: "很會把日常活成有意義的事。", keywords: ["溫柔", "想像", "價值"], accent: "#ff8a5b" },
+      INTP: { title: "概念拆解王", tagline: "腦中永遠在做模型。", keywords: ["分析", "概念", "好奇"], accent: "#6a7cff" },
+      ESTP: { title: "現場反應王", tagline: "先上場，細節再補。", keywords: ["反應快", "行動派", "直接"], accent: "#ef7a5a" },
+      ESFP: { title: "氣氛帶動王", tagline: "人在哪，熱鬧就在哪。", keywords: ["活潑", "即興", "分享"], accent: "#ff9f43" },
+      ENFP: { title: "靈感發電機", tagline: "想法很多，熱情也很多。", keywords: ["創意", "熱情", "連結"], accent: "#00c2a8" },
+      ENTP: { title: "點子辯論王", tagline: "喜歡把新分支一路打開。", keywords: ["辯證", "機智", "發想"], accent: "#2d8cff" },
+      ESTJ: { title: "效率管理型", tagline: "先定標準，再把事情推進。", keywords: ["執行", "管理", "效率"], accent: "#1f9d67" },
+      ESFJ: { title: "社群照顧型", tagline: "讓大家都好，是你的本能。", keywords: ["照顧", "協調", "連結"], accent: "#00a6a6" },
+      ENFJ: { title: "帶隊共感型", tagline: "能看見人，也能推動人。", keywords: ["帶領", "共感", "鼓舞"], accent: "#5d7dff" },
+      ENTJ: { title: "目標推進型", tagline: "不只想得到，也做得到。", keywords: ["目標", "推進", "決斷"], accent: "#3570ff" }
+    };
+
+    const typeGroups = {
+      Analysts: {
+        label: "Analysts",
+        subtitle: "策略與思辨",
+        types: ["INTJ", "INTP", "ENTJ", "ENTP"],
+        icon: "◆"
+      },
+      Diplomats: {
+        label: "Diplomats",
+        subtitle: "共感與理想",
+        types: ["INFJ", "INFP", "ENFJ", "ENFP"],
+        icon: "✦"
+      },
+      Sentinels: {
+        label: "Sentinels",
+        subtitle: "秩序與照顧",
+        types: ["ISTJ", "ISFJ", "ESTJ", "ESFJ"],
+        icon: "▣"
+      },
+      Explorers: {
+        label: "Explorers",
+        subtitle: "行動與即興",
+        types: ["ISTP", "ISFP", "ESTP", "ESFP"],
+        icon: "◌"
+      }
+    };
+
+    const axisProfiles = {
+      E: {
+        name: "E 外向",
+        short: "互動中充電，容易被現場節奏帶動。",
+        strengths: ["啟動聊天和活動比較自然", "在群體裡常有帶動感"],
+        blindspots: ["有時會太快答應，後面才發現行程太滿"]
+      },
+      I: {
+        name: "I 內向",
+        short: "偏好保留自己的節奏，需要安靜空間恢復能量。",
+        strengths: ["能獨立思考，深度投入事情", "不一定搶話，但想法通常很完整"],
+        blindspots: ["能量低時會更想退回自己的小世界"]
+      },
+      S: {
+        name: "S 實感",
+        short: "喜歡具體、可操作、能落地的資訊。",
+        strengths: ["注意細節與現場狀況", "整理資訊時很實際"],
+        blindspots: ["有時會太貼近眼前，少了一點發散"]
+      },
+      N: {
+        name: "N 直覺",
+        short: "善於聯想、看趨勢，也喜歡探索可能性。",
+        strengths: ["能快速看到概念與關聯", "很容易延伸出新想法"],
+        blindspots: ["常常想得很遠，但落地會慢一點"]
+      },
+      T: {
+        name: "T 思考",
+        short: "習慣先看邏輯、效率與原則。",
+        strengths: ["分析利弊很快", "遇事通常能把問題拆開處理"],
+        blindspots: ["說話有時太直，別人不一定跟得上"]
+      },
+      F: {
+        name: "F 情感",
+        short: "做決定時會考量關係與感受。",
+        strengths: ["容易站在別人的角度想", "在人際裡常讓人覺得舒服"],
+        blindspots: ["有時會把別人的感受放得太前面"]
+      },
+      J: {
+        name: "J 判斷",
+        short: "偏好先規劃好，再穩穩推進。",
+        strengths: ["擅長安排進度和收尾", "事情一旦排好就能穩定執行"],
+        blindspots: ["臨時變動太多時，會比較容易煩躁"]
+      },
+      P: {
+        name: "P 感知",
+        short: "保留彈性，喜歡根據現場調整。",
+        strengths: ["適應力高，能即時修正方向", "對新變化通常接受度高"],
+        blindspots: ["有時會拖到最後一刻才真正進入狀態"]
+      }
+    };
+
+    const state = {
+      index: 0,
+      answers: Array(questions.length).fill(null),
+      finished: false
+    };
+
+    const heroEl = document.getElementById("hero");
+    const quizEl = document.getElementById("quiz");
+    const resultEl = document.getElementById("result");
+    const startBtn = document.getElementById("startBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const resetFromQuizBtn = document.getElementById("resetFromQuizBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const questionCounter = document.getElementById("questionCounter");
+    const axisHint = document.getElementById("axisHint");
+    const questionAxis = document.getElementById("questionAxis");
+    const questionText = document.getElementById("questionText");
+    const choicesEl = document.getElementById("choices");
+    const progressFill = document.getElementById("progressFill");
+    const axisBadge = document.getElementById("axisBadge");
+    const resultCard = document.getElementById("resultCard");
+    const resultType = document.getElementById("resultType");
+    const resultTitleBadge = document.getElementById("resultTitleBadge");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultSubtitle = document.getElementById("resultSubtitle");
+    const keywordRow = document.getElementById("keywordRow");
+    const axisGrid = document.getElementById("axisGrid");
+    const typeLibrary = document.getElementById("typeLibrary");
+    const strengthList = document.getElementById("strengthList");
+    const blindspotList = document.getElementById("blindspotList");
+
+    function showSection(section) {
+      [heroEl, quizEl, resultEl].forEach((el) => el.classList.remove("active"));
+      section.classList.add("active");
+    }
+
+    function currentQuestion() {
+      return questions[state.index];
+    }
+
+    function axisProgressText(axis, index) {
+      const labels = {
+        "E/I": "正在測量你的互動能量",
+        "S/N": "正在測量你的資訊接收方式",
+        "T/F": "正在測量你的決策偏好",
+        "J/P": "正在測量你的生活節奏"
+      };
+      return labels[axis] + ` · 第 ${index + 1} 題`;
+    }
+
+    function renderQuestion() {
+      const q = currentQuestion();
+      questionCounter.textContent = `第 ${state.index + 1} 題 / ${questions.length} 題`;
+      questionAxis.textContent = q.axis;
+      questionText.textContent = q.prompt;
+      axisBadge.textContent = `目前向度：${q.axis}`;
+      axisHint.textContent = axisProgressText(q.axis, state.index);
+      progressFill.style.width = `${(state.index / questions.length) * 100}%`;
+      prevBtn.disabled = state.index === 0;
+      nextBtn.textContent = state.index === questions.length - 1 ? "看結果" : "下一題";
+      nextBtn.disabled = !state.answers[state.index];
+
+      choicesEl.innerHTML = "";
+      q.options.forEach((option, optionIndex) => {
+        const button = document.createElement("button");
+        button.className = "choice";
+        button.type = "button";
+        button.innerHTML = `
+          <span class="key">${optionIndex + 1}</span>
+          <span class="choice-icon">${option.icon}</span>
+          <span class="choice-body">
+            <span class="choice-title"><span>${option.label}</span></span>
+            <span class="choice-hint">${option.hint}</span>
+          </span>
+        `;
+        if (state.answers[state.index] === option.letter) {
+          button.classList.add("active");
+        }
+        button.addEventListener("click", () => selectAnswer(option.letter));
+        choicesEl.appendChild(button);
+      });
+    }
+
+    function typeGroupFor(type) {
+      return Object.values(typeGroups).find((group) => group.types.includes(type));
+    }
+
+    function renderTypeLibrary(activeType) {
+      typeLibrary.innerHTML = "";
+
+      Object.values(typeGroups).forEach((group) => {
+        const groupWrap = document.createElement("section");
+        groupWrap.className = "type-group";
+        groupWrap.innerHTML = `
+          <div class="type-group-head">
+            <div>
+              <h3>${group.label}</h3>
+              <span>${group.subtitle}</span>
+            </div>
+          </div>
+        `;
+
+        const grid = document.createElement("div");
+        grid.className = "type-grid";
+
+        group.types.forEach((type) => {
+          const profile = typeProfiles[type];
+          const tile = document.createElement("button");
+          const isActive = type === activeType;
+          tile.type = "button";
+          tile.className = `type-tile ${isActive ? "active" : "dimmed"}`;
+          tile.style.setProperty("--accent", profile.accent);
+          tile.style.setProperty("--accent-2", tintColor(profile.accent, 0.22));
+          tile.innerHTML = `
+            <span class="tile-icon">${group.icon}</span>
+            <span class="tile-code">${type}</span>
+            <span class="tile-title">${profile.title}</span>
+            <span class="tile-tag">${profile.tagline}</span>
+          `;
+          grid.appendChild(tile);
+        });
+
+        groupWrap.appendChild(grid);
+        typeLibrary.appendChild(groupWrap);
+      });
+    }
+
+    function selectAnswer(letter) {
+      state.answers[state.index] = letter;
+      renderQuestion();
+      if (state.index < questions.length - 1) {
+        nextBtn.disabled = false;
+      }
+    }
+
+    function goNext() {
+      if (!state.answers[state.index]) return;
+      if (state.index === questions.length - 1) {
+        finishQuiz();
+        return;
+      }
+      state.index += 1;
+      renderQuestion();
+    }
+
+    function goPrev() {
+      if (state.index === 0) return;
+      state.index -= 1;
+      renderQuestion();
+    }
+
+    function resetQuiz() {
+      state.index = 0;
+      state.answers = Array(questions.length).fill(null);
+      state.finished = false;
+      document.documentElement.style.setProperty("--accent", "#2d8cff");
+      document.documentElement.style.setProperty("--accent-2", "#00c2a8");
+      showSection(heroEl);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      renderQuestion();
+    }
+
+    function buildResult() {
+      const score = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+      state.answers.forEach((letter) => {
+        score[letter] += 1;
+      });
+
+      const type = [
+        score.E >= score.I ? "E" : "I",
+        score.S >= score.N ? "S" : "N",
+        score.T >= score.F ? "T" : "F",
+        score.J >= score.P ? "J" : "P"
+      ].join("");
+
+      const profile = typeProfiles[type] || typeProfiles.INTP;
+      const axisLetters = [type[0], type[1], type[2], type[3]];
+
+      resultType.textContent = type;
+      resultTitle.textContent = profile.title;
+      resultTitleBadge.textContent = profile.tagline;
+      resultSubtitle.textContent = `你這次的結果是 ${type}。${profile.tagline} 你的答案顯示，你在四個向度都有清楚的偏好。`;
+      document.documentElement.style.setProperty("--accent", profile.accent);
+      document.documentElement.style.setProperty("--accent-2", tintColor(profile.accent, 0.18));
+
+      keywordRow.innerHTML = "";
+      profile.keywords.forEach((keyword) => {
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = keyword;
+        keywordRow.appendChild(span);
+      });
+
+      axisGrid.innerHTML = "";
+      axisLetters.forEach((letter) => {
+        const info = axisProfiles[letter];
+        const card = document.createElement("div");
+        card.className = "axis-card";
+        card.innerHTML = `<strong>${info.name}</strong><p>${info.short}<br><br>這次測驗中，你在這個向度偏向 ${letter}。</p>`;
+        axisGrid.appendChild(card);
+      });
+
+      const strengths = [
+        axisProfiles[type[0]].strengths[0],
+        axisProfiles[type[1]].strengths[0],
+        axisProfiles[type[2]].strengths[0],
+        axisProfiles[type[3]].strengths[0],
+        `${profile.title} 的整體風格讓你很容易形成鮮明印象。`
+      ];
+
+      const blindspots = [
+        axisProfiles[type[0]].blindspots[0],
+        axisProfiles[type[1]].blindspots[0],
+        axisProfiles[type[2]].blindspots[0],
+        axisProfiles[type[3]].blindspots[0]
+      ];
+
+      strengthList.innerHTML = strengths.map((item) => `<li>${item}</li>`).join("");
+      blindspotList.innerHTML = blindspots.map((item) => `<li>${item}</li>`).join("");
+
+      resultCard.style.borderColor = `${profile.accent}33`;
+      resultCard.style.boxShadow = `0 18px 42px ${profile.accent}22`;
+
+      renderTypeLibrary(type);
+
+      spawnSparkles(resultCard, profile.accent);
+      state.finished = true;
+    }
+
+    function finishQuiz() {
+      buildResult();
+      showSection(resultEl);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      progressFill.style.width = "100%";
+    }
+
+    function tintColor(hex, alpha) {
+      const sanitized = hex.replace("#", "");
+      const num = parseInt(sanitized, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function spawnSparkles(target, accent) {
+      const rect = target.getBoundingClientRect();
+      const count = 12;
+      for (let i = 0; i < count; i += 1) {
+        const sparkle = document.createElement("span");
+        sparkle.className = "sparkle";
+        sparkle.style.background = accent;
+        sparkle.style.setProperty("--x", `${Math.random() * rect.width}px`);
+        sparkle.style.setProperty("--y", `${Math.random() * rect.height}px`);
+        sparkle.style.setProperty("--dx", `${(Math.random() - 0.5) * 220}px`);
+        sparkle.style.setProperty("--dy", `${(Math.random() - 0.7) * 220}px`);
+        sparkle.style.left = 0;
+        sparkle.style.top = 0;
+        target.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 900);
+      }
+    }
+
+    async function copyResult() {
+      const type = resultType.textContent;
+      const title = resultTitleBadge.textContent;
+      const text = `${type}｜${title}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = "已複製";
+        setTimeout(() => (copyBtn.textContent = "複製結果摘要"), 1200);
+      } catch (error) {
+        copyBtn.textContent = "複製失敗";
+        setTimeout(() => (copyBtn.textContent = "複製結果摘要"), 1200);
+      }
+    }
+
+    startBtn.addEventListener("click", () => {
+      showSection(quizEl);
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    prevBtn.addEventListener("click", goPrev);
+    nextBtn.addEventListener("click", goNext);
+    resetFromQuizBtn.addEventListener("click", resetQuiz);
+    restartBtn.addEventListener("click", resetQuiz);
+    copyBtn.addEventListener("click", copyResult);
+
+    document.addEventListener("keydown", (event) => {
+      if (!quizEl.classList.contains("active")) {
+        return;
+      }
+      if (event.key === "1") {
+        const first = currentQuestion().options[0];
+        selectAnswer(first.letter);
+      } else if (event.key === "2") {
+        const second = currentQuestion().options[1];
+        selectAnswer(second.letter);
+      } else if (event.key === "ArrowLeft") {
+        goPrev();
+      } else if (event.key === "ArrowRight") {
+        goNext();
+      }
+    });
+
+    renderQuestion();
+  </script>
+</body>
+</html>
